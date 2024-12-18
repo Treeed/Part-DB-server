@@ -50,7 +50,7 @@ class CurrencyRepository extends StructuralDBElementRepository
         //Create currency if it does not exist
         $name = Currencies::getName($iso_code);
 
-        $currency = $this->findOrCreateForInfoProvider($name);
+        $currency = $this->getSingleEntityLax($name, true);
         $currency->setIsoCode($iso_code);
 
         return $currency;

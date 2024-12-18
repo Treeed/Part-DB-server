@@ -125,14 +125,13 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
         return $result;
     }
 
-    /**
-     * Creates a structure of AbstractStructuralDBElements from a path separated by $separator, which splits the various levels.
-     * This function will try to use existing elements, if they are already in the database. If not, they will be created.
-     * An array of the created elements will be returned, with the last element being the deepest element.
-     * @return AbstractStructuralDBElement[]
-     * @phpstan-return array<int, TEntityClass>
-     */
-    public function getNewEntityFromPath(string $path, string $separator = '->'): array
+    public function getEntityFromPath(
+        string $path,
+        string $separator = '->',
+        bool $strictCase = true,
+        bool $allowAltNames = false,
+        bool $allowCreation = false
+    ): array
     {
         $parent = null;
         $result = [];
@@ -142,21 +141,10 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
                 continue;
             }
 
-            //Use the cache to prevent creating multiple entities for the same path
-            $entity = $this->getNewEntityFromCache($name, $parent);
+            $entity = $this->getSingleEntity($name, $parent, $allowCreation, $strictCase, $allowAltNames);
 
-            //See if we already have an element with this name and parent in the database
-            if (!$entity instanceof AbstractStructuralDBElement) {
-                $entity = $this->findOneBy(['name' => $name, 'parent' => $parent]);
-            }
-            if (null === $entity) {
-                $class = $this->getClassName();
-                /** @var AbstractStructuralDBElement $entity */
-                $entity = new $class;
-                $entity->setName($name);
-                $entity->setParent($parent);
-
-                $this->setNewEntityToCache($entity);
+            if($entity === null) {
+                return [];
             }
 
             $result[] = $entity;
@@ -164,6 +152,99 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
         }
 
         return $result;
+    }
+
+    public function getSingleEntity(
+        string $name,
+        ?AbstractStructuralDBElement $parent = null,
+        bool $allowCreation = false,
+        bool $respectParent = true,
+        bool $strictCase = true,
+        bool $allowAltNames = false,
+    ) : ?AbstractStructuralDBElement
+    {
+
+
+        //See if we already have an element with this name and parent in the database
+        //$entity = $this->findOneBy(['name' => $name, 'parent' => $parent]);
+        $entity = $this->getFromDB($name, false, $parent, $strictCase, $respectParent);
+        if($entity === null && $allowAltNames) {
+            $entity = $this->getFromDB($name, true, $parent, $strictCase, $respectParent);
+        }
+
+        if ($entity instanceof AbstractStructuralDBElement) {
+            return $entity;
+        }
+
+        if($allowCreation) {
+            return $this->newEntity($name, $parent);
+        }
+
+        return null;
+    }
+
+    private function newEntity(string $name, ?AbstractStructuralDBElement $parent = null): AbstractStructuralDBElement
+    {
+
+        //Use the cache to prevent creating multiple entities for the same path
+        $entity = $this->getNewEntityFromCache($name, $parent);
+
+        if (null === $entity) {
+            $class = $this->getClassName();
+            /** @var AbstractStructuralDBElement $entity */
+            $entity = new $class;
+            $entity->setName($name);
+            $entity->setAlternativeNames($name);
+            $entity->setParent($parent);
+
+            $this->setNewEntityToCache($entity);
+        }
+        return $entity;
+    }
+
+    private function getFromDB(string $name,
+                               bool $useAltName,
+                               ?AbstractStructuralDBElement
+                               $parent, bool $strictCase,
+                               bool $respectParent){
+
+        $qb = $this->createQueryBuilder('e');
+
+        $caseCommand = $strictCase ? '' : 'LOWER';
+        $nameKey = $useAltName ? 'e.alternative_names' : 'e.name';
+        $nameParameter = ":name";
+
+        #$qb->where($qb->expr()->like("$caseCommand(e.$nameKey)", "$caseCommand(:name)"));
+        if(!$strictCase){
+            $nameKey = "LOWER($nameKey)";
+            $nameParameter = "LOWER($nameParameter)";
+        }
+
+        $qb->where($qb->expr()->like($nameKey, $nameParameter));
+        $qb->setParameter('name', $name);
+
+        if($respectParent) {
+            $qb->andWhere($qb->expr()->like("e.parent", ":parent"));
+            $qb->setParameter('parent', $parent);
+        }
+
+
+        $result = $qb->getQuery()->getResult();
+
+        if (count($result) >= 1) {
+            return $result[0];
+        }
+        return null;
+    }
+
+    public function getEntityFromPathStrict(string $path, string $separator = '->', bool $allowCreation = false): array
+    {
+        return $this->getEntityFromPath($path, $separator, true, false, $allowCreation);
+    }
+
+    public function getSingleEntityLax(string $name, bool $allowCreation) : ?AbstractStructuralDBElement
+    {
+        return $this->getSingleEntity($name, null, $allowCreation, false, false, true);
     }
 
     private function getNewEntityFromCache(string $name, ?AbstractStructuralDBElement $parent): ?AbstractStructuralDBElement
@@ -178,103 +259,4 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
         $this->new_entity_cache[$key] = $entity;
     }
 
-    /**
-     * Returns an element of AbstractStructuralDBElements queried from a path separated by $separator, which splits the various levels.
-     * An array of the created elements will be returned, with the last element being the deepest element.
-     * If no element was found, an empty array will be returned.
-     * @return AbstractStructuralDBElement[]
-     * @phpstan-return array<int, TEntityClass>
-     */
-    public function getEntityByPath(string $path, string $separator = '->'): array
-    {
-        $parent = null;
-        $result = [];
-        foreach (explode($separator, $path) as $name) {
-            $name = trim($name);
-            if ('' === $name) {
-                continue;
-            }
-
-            //See if we already have an element with this name and parent
-            $entity = $this->findOneBy(['name' => $name, 'parent' => $parent]);
-            if (null === $entity) {
-                return [];
-            }
-
-            $result[] = $entity;
-            $parent = $entity;
-        }
-
-        return $result;
-    }
-
-    /**
-     * Finds the element with the given name for the use with the InfoProvider System
-     * The name search is a bit more fuzzy than the normal findByName, because it is case-insensitive and ignores special characters.
-     * Also, it will try to find the element using the additional names field, of the elements.
-     * @param  string  $name
-     * @return AbstractStructuralDBElement|null
-     * @phpstan-return TEntityClass|null
-     */
-    public function findForInfoProvider(string $name): ?AbstractStructuralDBElement
-    {
-        //First try to find the element by name
-        $qb = $this->createQueryBuilder('e');
-        //Use lowercase conversion to be case-insensitive
-        $qb->where($qb->expr()->like('LOWER(e.name)', 'LOWER(:name)'));
-
-        $qb->setParameter('name', $name);
-
-        $result = $qb->getQuery()->getResult();
-
-        if (count($result) === 1) {
-            return $result[0];
-        }
-
-        //If we have no result, try to find the element by alternative names
-        $qb = $this->createQueryBuilder('e');
-        //Use lowercase conversion to be case-insensitive
-        $qb->where($qb->expr()->like('LOWER(e.alternative_names)', 'LOWER(:name)'));
-        $qb->setParameter('name', '%'.$name.',%');
-
-        $result = $qb->getQuery()->getResult();
-
-        if (count($result) >= 1) {
-            return $result[0];
-        }
-
-        //If we find nothing, return null
-        return null;
-    }
-
-    /**
-     * Similar to findForInfoProvider, but will create a new element with the given name if none was found.
-     * @param  string  $name
-     * @return AbstractStructuralDBElement
-     * @phpstan-return TEntityClass
-     */
-    public function findOrCreateForInfoProvider(string $name): AbstractStructuralDBElement
-    {
-        $entity = $this->findForInfoProvider($name);
-        if (null === $entity) {
-
-            //Try to find if we already have an element cached for this name
-            $entity = $this->getNewEntityFromCache($name, null);
-            if ($entity !== null) {
-                return $entity;
-            }
-
-            $class = $this->getClassName();
-            /** @var AbstractStructuralDBElement $entity */
-            $entity = new $class;
-            $entity->setName($name);
-
-            //Set the found name to the alternative names, so the entity can be easily renamed later
-            $entity->setAlternativeNames($name);
-
-            $this->setNewEntityToCache($entity);
-        }
-
-        return $entity;
-    }
 }

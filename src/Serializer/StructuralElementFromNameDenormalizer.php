@@ -60,7 +60,7 @@ class StructuralElementFromNameDenormalizer implements DenormalizerInterface
         $path_delimiter = $context['path_delimiter'] ?? '->';
 
         if ($context['create_unknown_datastructures'] ?? false) {
-            $elements = $repo->getNewEntityFromPath($data, $path_delimiter);
+            $elements = $repo->getEntityFromPathStrict($data, $path_delimiter, true);
             //Persist all new elements
             foreach ($elements as $element) {
                 $this->em->persist($element);
@@ -71,7 +71,7 @@ class StructuralElementFromNameDenormalizer implements DenormalizerInterface
             return end($elements);
         }
 
-        $elements = $repo->getEntityByPath($data, $path_delimiter);
+        $elements = $repo->getEntityFromPathStrict($data, $path_delimiter, false);
         if ($elements === []) {
             return null;
         }

@@ -262,7 +262,7 @@ final class DTOtoEntityConverter
      */
     private function getOrCreateEntityNonNull(string $class, string $name): AbstractStructuralDBElement
     {
-        return $this->em->getRepository($class)->findOrCreateForInfoProvider($name);
+        return $this->em->getRepository($class)->getSingleEntityLax($name, true);
     }
 
     /**
@@ -287,7 +287,7 @@ final class DTOtoEntityConverter
     private function getDatasheetType(): AttachmentType
     {
         /** @var AttachmentType $tmp */
-        $tmp = $this->em->getRepository(AttachmentType::class)->findOrCreateForInfoProvider(self::TYPE_DATASHEETS_NAME);
+        $tmp = $this->em->getRepository(AttachmentType::class)->getSingleEntityLax(self::TYPE_DATASHEETS_NAME, true);
 
         //If the entity was newly created, set the file filter
         if ($tmp->getID() === null) {
@@ -305,7 +305,7 @@ final class DTOtoEntityConverter
     private function getImageType(): AttachmentType
     {
         /** @var AttachmentType $tmp */
-        $tmp = $this->em->getRepository(AttachmentType::class)->findOrCreateForInfoProvider(self::TYPE_IMAGE_NAME);
+        $tmp = $this->em->getRepository(AttachmentType::class)->getSingleEntityLax(self::TYPE_IMAGE_NAME, true);
 
         //If the entity was newly created, set the file filter
         if ($tmp->getID() === null) {

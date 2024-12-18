@@ -131,7 +131,7 @@ class EntityImporter
             }
             //We can only use the getNewEntityFromPath function, if the repository is a StructuralDBElementRepository
             if ($repo instanceof StructuralDBElementRepository) {
-                $entities = $repo->getNewEntityFromPath($new_path);
+                $entities = $repo->getEntityFromPathStrict($new_path, allowCreation: true);
                 $entity = end($entities);
             } else { //Otherwise just create a new entity
                 $entity = new $class_name;

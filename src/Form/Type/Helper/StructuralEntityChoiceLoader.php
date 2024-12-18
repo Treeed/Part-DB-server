@@ -94,7 +94,7 @@ class StructuralEntityChoiceLoader extends AbstractChoiceLoader
         /** @var StructuralDBElementRepository $repo */
         $repo = $this->entityManager->getRepository($class);
 
-        $entities = $repo->getNewEntityFromPath($value, '->');
+        $entities = $repo->getEntityFromPathStrict($value, '->', true);
 
         $results = [];
 

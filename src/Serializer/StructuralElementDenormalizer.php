@@ -89,7 +89,7 @@ class StructuralElementDenormalizer implements DenormalizerInterface, Denormaliz
         $repo = $this->entityManager->getRepository($type);
 
         $path = $deserialized_entity->getFullPath(AbstractStructuralDBElement::PATH_DELIMITER_ARROW);
-        $db_elements = $repo->getEntityByPath($path, AbstractStructuralDBElement::PATH_DELIMITER_ARROW);
+        $db_elements = $repo->getEntityFromPathStrict($path, AbstractStructuralDBElement::PATH_DELIMITER_ARROW, false);
         if ($db_elements !== []) {
             //We already have the entity in the database, so we can return it
             return end($db_elements);
