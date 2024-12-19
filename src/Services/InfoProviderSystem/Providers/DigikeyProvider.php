@@ -33,7 +33,7 @@ use App\Services\InfoProviderSystem\DTOs\SearchResultDTO;
 use App\Services\OAuth\OAuthTokenManager;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class DigikeyProvider implements InfoProviderInterface
+class DigikeyProvider extends AbstractInfoProvider
 {
 
     private const OAUTH_APP_NAME = 'ip_digikey_oauth';
@@ -198,7 +198,9 @@ class DigikeyProvider implements InfoProviderInterface
         //Replace the  ' - ' category separator with ' -> '
         $sub_category = str_replace(' - ', ' -> ', $sub_category);
 
-        return $category . ' -> ' . $sub_category;
+        $full_category = $category . ' -> ' . $sub_category;
+
+        return $this->processCategory($full_category);
     }
 
     /**

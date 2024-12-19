@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace App\Twig;
 
 use App\Services\InfoProviderSystem\ProviderRegistry;
-use App\Services\InfoProviderSystem\Providers\InfoProviderInterface;
+use App\Services\InfoProviderSystem\Providers\AbstractInfoProvider;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -45,9 +45,9 @@ class InfoProviderExtension extends AbstractExtension
     /**
      * Gets the info provider with the given key. Returns null, if the provider does not exist.
      * @param  string  $key
-     * @return InfoProviderInterface|null
+     * @return AbstractInfoProvider|null
      */
-    private function getInfoProvider(string $key): ?InfoProviderInterface
+    private function getInfoProvider(string $key): ?AbstractInfoProvider
     {
         try {
             return $this->providerRegistry->getProviderByKey($key);

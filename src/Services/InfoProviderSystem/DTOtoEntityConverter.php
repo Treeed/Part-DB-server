@@ -27,6 +27,7 @@ use App\Entity\Attachments\AttachmentType;
 use App\Entity\Attachments\PartAttachment;
 use App\Entity\Base\AbstractStructuralDBElement;
 use App\Entity\Parameters\PartParameter;
+use App\Entity\Parts\Category;
 use App\Entity\Parts\Footprint;
 use App\Entity\Parts\InfoProviderReference;
 use App\Entity\Parts\Manufacturer;
@@ -153,6 +154,7 @@ final class DTOtoEntityConverter
         $entity->setName($dto->name);
         $entity->setDescription($dto->description ?? '');
         $entity->setComment($dto->notes ?? '');
+        $entity->setCategory($this->getOrCreateEntityFromPath(Category::class, $dto->category, "->"));
 
         $entity->setMass($dto->mass);
 
@@ -263,6 +265,18 @@ final class DTOtoEntityConverter
     private function getOrCreateEntityNonNull(string $class, string $name): AbstractStructuralDBElement
     {
         return $this->em->getRepository($class)->getSingleEntityLax($name, true);
+    }
+
+    private function getOrCreateEntityFromPath(string $class, string $name, string $separator): ?AbstractStructuralDBElement
+    {
+        if ($name === null) {
+            return null;
+        }
+        $result =  $this->em->getRepository($class)->getEntityFromPath($name, $separator, false, true, true);
+        if($result){
+            return end($result);
+        }
+        return null;
     }
 
     /**

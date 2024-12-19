@@ -32,7 +32,7 @@ use Symfony\Component\DependencyInjection\Attribute\When;
  * This is a provider, which is used during tests
  */
 #[When(env: 'test')]
-class TestProvider implements InfoProviderInterface
+class TestProvider extends AbstractInfoProvider
 {
 
     public function getProviderInfo(): array

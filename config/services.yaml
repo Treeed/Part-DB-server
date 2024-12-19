@@ -24,7 +24,7 @@ services:
         App\Services\LabelSystem\PlaceholderProviders\PlaceholderProviderInterface:
             tags: ['app.label_placeholder_provider']
 
-        App\Services\InfoProviderSystem\Providers\InfoProviderInterface:
+        App\Services\InfoProviderSystem\Providers\AbstractInfoProvider:
             tags: ['app.info_provider']
 
     # makes classes in src/ available to be used as services

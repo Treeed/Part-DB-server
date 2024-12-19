@@ -41,7 +41,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
 
-class MouserProvider implements InfoProviderInterface
+class MouserProvider extends AbstractInfoProvider
 {
 
     private const ENDPOINT_URL = 'https://api.mouser.com/api/v2/search';

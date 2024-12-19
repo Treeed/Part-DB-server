@@ -31,7 +31,7 @@ use App\Services\InfoProviderSystem\DTOs\PriceDTO;
 use App\Services\InfoProviderSystem\DTOs\PurchaseInfoDTO;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class Element14Provider implements InfoProviderInterface
+class Element14Provider extends AbstractInfoProvider
 {
 
     private const ENDPOINT_URL = 'https://api.element14.com/catalog/products';

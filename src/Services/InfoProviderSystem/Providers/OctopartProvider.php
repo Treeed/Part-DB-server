@@ -40,7 +40,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  * As the limits for Octopart are quite limited, we use an additional layer of caching here, we get the full parts during a search
  * and cache them, so we can use them for the detail view without having to query the API again.
  */
-class OctopartProvider implements InfoProviderInterface
+class OctopartProvider extends AbstractInfoProvider
 {
     private const OAUTH_APP_NAME = 'ip_octopart_oauth';
 

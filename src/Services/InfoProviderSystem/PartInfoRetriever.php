@@ -26,7 +26,7 @@ namespace App\Services\InfoProviderSystem;
 use App\Entity\Parts\Part;
 use App\Services\InfoProviderSystem\DTOs\PartDetailDTO;
 use App\Services\InfoProviderSystem\DTOs\SearchResultDTO;
-use App\Services\InfoProviderSystem\Providers\InfoProviderInterface;
+use App\Services\InfoProviderSystem\Providers\AbstractInfoProvider;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 
@@ -43,7 +43,7 @@ final class PartInfoRetriever
 
     /**
      * Search for a keyword in the given providers. The results can be cached
-     * @param  string[]|InfoProviderInterface[]  $providers A list of providers to search in, either as provider keys or as provider instances
+     * @param  string[]|AbstractInfoProvider[]  $providers A list of providers to search in, either as provider keys or as provider instances
      * @param  string  $keyword The keyword to search for
      * @return SearchResultDTO[] The search results
      */
@@ -56,7 +56,7 @@ final class PartInfoRetriever
                 $provider = $this->provider_registry->getProviderByKey($provider);
             }
 
-            if (!$provider instanceof InfoProviderInterface) {
+            if (!$provider instanceof AbstractInfoProvider) {
                 throw new \InvalidArgumentException("The provider must be either a provider key or a provider instance!");
             }
 
@@ -71,7 +71,7 @@ final class PartInfoRetriever
      * Search for a keyword in the given provider. The result is cached for 7 days.
      * @return SearchResultDTO[]
      */
-    protected function searchInProvider(InfoProviderInterface $provider, string $keyword): array
+    protected function searchInProvider(AbstractInfoProvider $provider, string $keyword): array
     {
         //Generate key and escape reserved characters from the provider id
         $escaped_keyword = urlencode($keyword);

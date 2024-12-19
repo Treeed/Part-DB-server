@@ -32,7 +32,7 @@ use App\Services\InfoProviderSystem\DTOs\PurchaseInfoDTO;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-class LCSCProvider implements InfoProviderInterface
+class LCSCProvider extends AbstractInfoProvider
 {
 
     private const ENDPOINT_URL = 'https://wmsc.lcsc.com/ftps/wm';

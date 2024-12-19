@@ -92,7 +92,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Psr\Cache\CacheItemPoolInterface;
 
 
-class OEMSecretsProvider implements InfoProviderInterface
+class OEMSecretsProvider extends AbstractInfoProvider
 {
 
     private const ENDPOINT_URL = 'https://oemsecretsapi.com/partsearch';

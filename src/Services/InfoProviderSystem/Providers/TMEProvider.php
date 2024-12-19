@@ -31,7 +31,7 @@ use App\Services\InfoProviderSystem\DTOs\PriceDTO;
 use App\Services\InfoProviderSystem\DTOs\PurchaseInfoDTO;
 use App\Services\InfoProviderSystem\DTOs\SearchResultDTO;
 
-class TMEProvider implements InfoProviderInterface
+class TMEProvider extends AbstractInfoProvider
 {
 
     private const VENDOR_NAME = 'TME';

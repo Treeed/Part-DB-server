@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace App\Services\InfoProviderSystem;
 
-use App\Services\InfoProviderSystem\Providers\InfoProviderInterface;
+use App\Services\InfoProviderSystem\Providers\AbstractInfoProvider;
 
 /**
  * This class keeps track of all registered info providers and allows to find them by their key
@@ -32,18 +32,18 @@ use App\Services\InfoProviderSystem\Providers\InfoProviderInterface;
 final class ProviderRegistry
 {
     /**
-     * @var InfoProviderInterface[] The info providers index by their keys
-     * @phpstan-var array<string, InfoProviderInterface>
+     * @var AbstractInfoProvider[] The info providers index by their keys
+     * @phpstan-var array<string, AbstractInfoProvider>
      */
     private array $providers_by_name = [];
 
     /**
-     * @var InfoProviderInterface[] The enabled providers indexed by their keys
+     * @var AbstractInfoProvider[] The enabled providers indexed by their keys
      */
     private array $providers_active = [];
 
     /**
-     * @var InfoProviderInterface[] The disabled providers indexed by their keys
+     * @var AbstractInfoProvider[] The disabled providers indexed by their keys
      */
     private array $providers_disabled = [];
 
@@ -53,7 +53,7 @@ final class ProviderRegistry
     private bool $initialized = false;
 
     /**
-     * @param  iterable<InfoProviderInterface>  $providers
+     * @param  iterable<AbstractInfoProvider>  $providers
      */
     public function __construct(private readonly iterable $providers)
     {
@@ -88,7 +88,7 @@ final class ProviderRegistry
 
     /**
      * Returns an array of all registered providers (enabled and disabled)
-     * @return InfoProviderInterface[]
+     * @return AbstractInfoProvider[]
      */
     public function getProviders(): array
     {
@@ -102,10 +102,10 @@ final class ProviderRegistry
     /**
      * Returns the provider identified by the given key
      * @param  string  $key
-     * @return InfoProviderInterface
+     * @return AbstractInfoProvider
      * @throws \InvalidArgumentException If the provider with the given key does not exist
      */
-    public function getProviderByKey(string $key): InfoProviderInterface
+    public function getProviderByKey(string $key): AbstractInfoProvider
     {
         if (!$this->initialized) {
             $this->initStructures();
@@ -116,7 +116,7 @@ final class ProviderRegistry
 
     /**
      * Returns an array of all active providers
-     * @return InfoProviderInterface[]
+     * @return AbstractInfoProvider[]
      */
     public function getActiveProviders(): array
     {
@@ -129,7 +129,7 @@ final class ProviderRegistry
 
     /**
      * Returns an array of all disabled providers
-     * @return InfoProviderInterface[]
+     * @return AbstractInfoProvider[]
      */
     public function getDisabledProviders(): array
     {

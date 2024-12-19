@@ -25,10 +25,11 @@ namespace App\Services\InfoProviderSystem\Providers;
 
 use App\Services\InfoProviderSystem\DTOs\PartDetailDTO;
 use App\Services\InfoProviderSystem\DTOs\SearchResultDTO;
+use Symfony\Component\Form\Exception\InvalidConfigurationException;
+use Symfony\Component\Yaml\Yaml;
 
-interface InfoProviderInterface
+abstract class AbstractInfoProvider
 {
-
     /**
      * Get information about this provider
      *
@@ -42,34 +43,34 @@ interface InfoProviderInterface
      *
      * @phpstan-return array{ name: string, description?: string, logo?: string, url?: string, disabled_help?: string, oauth_app_name?: string }
      */
-    public function getProviderInfo(): array;
+    abstract public function getProviderInfo(): array;
 
     /**
      * Returns a unique key for this provider, which will be saved into the database
      * and used to identify the provider
      * @return string A unique key for this provider (e.g. "digikey")
      */
-    public function getProviderKey(): string;
+    abstract public function getProviderKey(): string;
 
     /**
      * Checks if this provider is enabled or not (meaning that it can be used for searching)
      * @return bool True if the provider is enabled, false otherwise
      */
-    public function isActive(): bool;
+    abstract public function isActive(): bool;
 
     /**
      * Searches for a keyword and returns a list of search results
      * @param  string  $keyword The keyword to search for
      * @return SearchResultDTO[] A list of search results
      */
-    public function searchByKeyword(string $keyword): array;
+    abstract public function searchByKeyword(string $keyword): array;
 
     /**
      * Returns detailed information about the part with the given id
      * @param  string  $id
      * @return PartDetailDTO
      */
-    public function getDetails(string $id): PartDetailDTO;
+    abstract public function getDetails(string $id): PartDetailDTO;
 
     /**
      * A list of capabilities this provider supports (which kind of data it can provide).
@@ -77,5 +78,45 @@ interface InfoProviderInterface
      * Currently, this list is purely informational and not used in functional checks.
      * @return ProviderCapabilities[]
      */
-    public function getCapabilities(): array;
+    abstract public function getCapabilities(): array;
+
+    protected function processCategory(string $category): string{
+        $config_data = __DIR__.'/../../../../config/dataProviders/'.$this->getProviderKey().'.yaml';
+
+        //Read the permission config file...
+        $config = Yaml::parse(
+            file_get_contents($config_data)
+        );
+
+        $translationInput = explode("->", $category);
+        $translationInput = array_map('trim', $translationInput);
+
+        foreach ($config["categories"] as $translationKey => $translationValue) {
+            $translationKey = explode("->", $translationKey);
+            $translationKey = array_map('trim', $translationKey);
+
+            if(array_shift($translationKey) != "root"){
+                throw new InvalidConfigurationException("All category translation keys must start with root");
+            }
+
+            if(count($translationKey) > count($translationInput)){
+                continue;
+            }
+
+            $matches = true;
+            foreach ($translationKey as $index => $item) {
+                if($translationInput[$index] != $item){
+                    $matches = false;
+                    break;
+                }
+            }
+            if($matches){
+                $translationValue = explode("->", $translationValue);
+                $translationValue = array_map('trim', $translationValue);
+                $translationInput = array_merge($translationValue, array_slice($translationInput, count($translationKey)));
+            }
+        }
+        return implode("->", $translationInput);
+    }
+
 }
