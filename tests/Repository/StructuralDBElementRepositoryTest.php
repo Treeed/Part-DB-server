@@ -122,7 +122,7 @@ class StructuralDBElementRepositoryTest extends WebTestCase
     {
         $path = 'Node 1/ Node 1.1 /Node 1.1.1';
 
-        $nodes = $this->repo->getEntityFromPathStrict($path, '/', true);
+        $nodes = $this->repo->getNewEntityFromPath($path, '/');
 
         $this->assertSame('Node 1', $nodes[0]->getName());
         //Node must be from DB
@@ -141,7 +141,7 @@ class StructuralDBElementRepositoryTest extends WebTestCase
     {
         $path = 'Element 1-> Element 1.1 ->Element 1.1.1';
 
-        $nodes = $this->repo->getEntityFromPathStrict($path, allowCreation: true);
+        $nodes = $this->repo->getNewEntityFromPath($path);
 
         $this->assertSame('Element 1', $nodes[0]->getName());
         //Node must not be from DB
@@ -160,7 +160,7 @@ class StructuralDBElementRepositoryTest extends WebTestCase
     {
         $path = 'Node 1-> Node 1.1 -> New Node';
 
-        $nodes = $this->repo->getEntityFromPathStrict($path, allowCreation: true);
+        $nodes = $this->repo->getNewEntityFromPath($path);
 
         $this->assertSame('Node 1', $nodes[0]->getName());
         //Node must be from DB

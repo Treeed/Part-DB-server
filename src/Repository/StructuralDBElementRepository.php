@@ -141,7 +141,7 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
                 continue;
             }
 
-            $entity = $this->getSingleEntity($name, $parent, $allowCreation, $strictCase, $allowAltNames);
+            $entity = $this->getSingleEntity($name, $parent, $allowCreation, true, $strictCase, $allowAltNames);
 
             if($entity === null) {
                 return [];
@@ -166,9 +166,8 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
 
 
         //See if we already have an element with this name and parent in the database
-        //$entity = $this->findOneBy(['name' => $name, 'parent' => $parent]);
         $entity = $this->getFromDB($name, false, $parent, $strictCase, $respectParent);
-        if($entity === null && $allowAltNames) {
+        if ($entity === null && $allowAltNames) {
             $entity = $this->getFromDB($name, true, $parent, $strictCase, $respectParent);
         }
 
@@ -210,11 +209,9 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
 
         $qb = $this->createQueryBuilder('e');
 
-        $caseCommand = $strictCase ? '' : 'LOWER';
         $nameKey = $useAltName ? 'e.alternative_names' : 'e.name';
         $nameParameter = ":name";
 
-        #$qb->where($qb->expr()->like("$caseCommand(e.$nameKey)", "$caseCommand(:name)"));
         if(!$strictCase){
             $nameKey = "LOWER($nameKey)";
             $nameParameter = "LOWER($nameParameter)";
@@ -224,10 +221,22 @@ class StructuralDBElementRepository extends AttachmentContainingDBElementReposit
         $qb->setParameter('name', $name);
 
         if($respectParent) {
-            $qb->andWhere($qb->expr()->like("e.parent", ":parent"));
-            $qb->setParameter('parent', $parent);
-        }
 
+            if($parent === null) {
+
+                $qb->andWhere($qb->expr()->isNull("e.parent"));
+            }
+            else{
+                //can't look for elements that haven't been persisted yet
+                if($parent->getID() === null) {
+                    return null;
+                }
+
+                $qb->andWhere($qb->expr()->eq("e.parent", ":parent"));
+                $qb->setParameter('parent', $parent);
+            }
+
+        }
 
         $result = $qb->getQuery()->getResult();
 
