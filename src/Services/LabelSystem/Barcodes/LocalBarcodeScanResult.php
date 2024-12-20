@@ -28,7 +28,7 @@ use App\Entity\LabelSystem\LabelSupportedElement;
 /**
  * This class represents the result of a barcode scan, with the target type and the ID of the element
  */
-class BarcodeScanResult
+class LocalBarcodeScanResult
 {
     public function __construct(
         public readonly LabelSupportedElement $target_type,

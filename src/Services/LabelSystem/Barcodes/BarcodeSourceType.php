@@ -36,5 +36,7 @@ enum BarcodeSourceType
      * This barcode is a custom barcode from a third party like a vendor, which was set via the vendor_barcode
      * field of a part lot.
      */
+    case USER_DEFINED;
+
     case VENDOR;
 }
