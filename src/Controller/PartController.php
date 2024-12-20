@@ -229,6 +229,10 @@ class PartController extends AbstractController
         $dto = $infoRetriever->getDetails($providerKey, $providerId);
         $new_part = $infoRetriever->dtoToPart($dto);
 
+        if($new_part->getCategory()->getID() === null){
+            $this->addFlash('warning', 'Category provided by info provider not known yet. Check before saving part'); # TODO: translation
+        }
+
         return $this->renderPartForm('new', $request, $new_part, [
             'info_provider_dto' => $dto,
         ]);
