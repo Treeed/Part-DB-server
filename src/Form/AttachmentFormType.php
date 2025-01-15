@@ -198,6 +198,23 @@ class AttachmentFormType extends AbstractType
                 }
             });
         }
+
+        //Add a hint that a user uploaded file is present when there is nothing else in the URL field
+        $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event): void {
+            $form = $event->getForm();
+            $attachment = $form->getData();
+            $url_options = $form->get('url')->getConfig()->getOptions();
+
+            if (!$attachment instanceof Attachment) {
+                return;
+            }
+            if(($url_options['data'] === '' || $url_options['data'] === null) && $attachment->hasInternal()) {
+                $url_options['attr']['placeholder'] = 'User uploaded file'; //TODO: Translate!
+            }
+            //It looks a bit weird to add that here, but that's the only way to edit an attribute
+            $form->add('url', TextType::class, $url_options);
+        });
+
     }
 
     public function configureOptions(OptionsResolver $resolver): void
