@@ -82,7 +82,8 @@ class AttachmentRepository extends DBElementRepository
     }
 
     /**
-     * Gets the count of all attachments where a user uploaded a file or a file was downloaded from an external source.
+     * Gets the count of all attachments where a user uploaded a file (or an external file was downloaded, but the path
+     * is not known)
      *
      * @throws NoResultException
      * @throws NonUniqueResultException
@@ -91,12 +92,31 @@ class AttachmentRepository extends DBElementRepository
     {
         $qb = $this->createQueryBuilder('attachment');
         $qb->select('COUNT(attachment)')
-            ->where('attachment.internal_path LIKE :base ESCAPE \'#\'')
-            ->orWhere('attachment.internal_path LIKE :media ESCAPE \'#\'')
-            ->orWhere('attachment.internal_path LIKE :secure ESCAPE \'#\'');
+            ->where('attachment.internal_path LIKE :base ESCAPE \'#\' 
+            OR attachment.internal_path LIKE :media ESCAPE \'#\' 
+            OR attachment.internal_path LIKE :secure ESCAPE \'#\'')
+            ->andWhere('attachment.external_path = \'\'');
+
         $qb->setParameter('secure', '#%SECURE#%%');
         $qb->setParameter('base', '#%BASE#%%');
         $qb->setParameter('media', '#%MEDIA#%%');
+        $query = $qb->getQuery();
+
+        return (int) $query->getSingleScalarResult();
+    }
+
+    /**
+     * Gets the count of all attachments where a file was downloaded from an external source and the source is known
+     *
+     * @throws NoResultException
+     * @throws NonUniqueResultException
+     */
+    public function getDownloadedAttachments(): int
+    {
+        $qb = $this->createQueryBuilder('attachment');
+        $qb->select('COUNT(attachment)')
+            ->where('attachment.internal_path <> \'\'')
+            ->andWhere('attachment.external_path <> \'\'');
         $query = $qb->getQuery();
 
         return (int) $query->getSingleScalarResult();

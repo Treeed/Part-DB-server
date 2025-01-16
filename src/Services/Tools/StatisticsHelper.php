@@ -144,7 +144,7 @@ class StatisticsHelper
     }
 
     /**
-     * Gets the count of all external (only containing a URL) attachments.
+     * Gets the count of all external attachments (attachments containing an external path).
      *
      * @throws NoResultException
      * @throws NonUniqueResultException
@@ -155,7 +155,8 @@ class StatisticsHelper
     }
 
     /**
-     * Gets the count of all attachments where the user uploaded a file.
+     * Gets the count of all attachments where a user uploaded a file (or an external file was downloaded, but the path
+     * is not known)
      *
      * @throws NoResultException
      * @throws NonUniqueResultException
@@ -163,5 +164,16 @@ class StatisticsHelper
     public function getUserUploadedAttachmentsCount(): int
     {
         return $this->attachment_repo->getUserUploadedAttachments();
+    }
+
+    /**
+     * Gets the count of all attachments where a file was downloaded from an external source and the source is known
+     *
+     * @throws NoResultException
+     * @throws NonUniqueResultException
+     */
+    public function getDownloadedAttachmentsCount(): int
+    {
+        return $this->attachment_repo->getDownloadedAttachments();
     }
 }
